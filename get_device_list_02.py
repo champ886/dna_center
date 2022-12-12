@@ -1,17 +1,35 @@
 import requests
 import json
-import sys
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+from post_to_get_token_function import get_token
 
-url = "https://sandboxdnac.cisco.com/dna/intent/api/v1/network-device"
+def my_main():
+    requests.packages.urllib3.disable_warnings()
+    token = get_token()
 
-payload={}
-headers = {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  'X-Auth-Token': "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MGVjNGU0ZjRjYTdmOTIyMmM4MmRhNjYiLCJhdXRoU291cmNlIjoiaW5$"
-}
+    url = "https://sandboxdnac.cisco.com/dna/intent/api/v1/network-device"
 
-response01 = requests.request("GET", url, headers=headers, data=payload, verify=False)
-print ("All devices count: ",json.dumps(response01.json()["response"], indent=4))
+    payload={}
+    headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'X-Auth-Token': token
+            }
 
-#print(response.text)
+    #response01 = requests.request("GET", url, headers=headers, data=payload, verify=False)
+    my_resp= requests.get(url, headers=headers,verify=False)
+    
+    #print ("All devices count: ",json.dumps(my_resp.json(), indent=4))
+    #print ("All devices count: ",json.dumps(response01.json()["response"], indent=4))
+    device_list = json.dumps(my_resp.json(), indent = 2)
+    print(device_list)
+
+    if my_resp.ok:
+      for device in my_resp.json()["response"]:
+        print(f"ID: {device['id']} IP: {device['managementIpAddress']}")
+
+    else:
+      print(f"Device collection failed with code {my_resp.status_code}")
+      print(f"Failure body: {my_resp.text}")
+
+my_main()
